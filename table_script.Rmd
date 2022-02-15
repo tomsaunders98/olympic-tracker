@@ -1,0 +1,87 @@
+---
+title: "2022 Winter Olympics medal table"
+output: 
+  html_document:
+    css: "style.css"
+---
+
+
+```{r setup, include=FALSE, echo = FALSE}
+library(tidyverse, quietly = T)
+library(rvest, quietly = T)
+library(reactable, quietly = T)
+library(htmltools)
+library(grDevices)
+
+ol_table <- read_html("https://en.wikipedia.org/wiki/2022_Winter_Olympics_medal_table") %>%
+html_element(".wikitable") %>%
+html_table() %>%
+rename(Country = 2) %>%
+filter(str_detect(Rank, "^\\d")) %>%
+mutate(Rank = as.numeric(Rank),
+     Country = gsub("*", "", Country, fixed = T))
+
+make_color_pal <- function(colors, bias = 1) {
+  get_color <- grDevices::colorRamp(colors, bias = bias)
+  function(x)
+    rgb(get_color(x), maxColorValue = 255)
+}
+
+pal_inews <-
+  make_color_pal(c("#d0587e", "#f1eac8", "#019392"), bias = 1.3)
+
+
+```
+
+```{r table, echo = FALSE}
+reactable(
+  ol_table,
+  defaultSorted = list("Rank" = "asc"),
+  searchable = TRUE,
+  showSortable = TRUE,
+  minRows = 10,
+  defaultColDef = colDef(headerStyle = list(fontWeight = "bold")),
+  columns = list(
+    Rank = colDef(sortable = TRUE),
+    Country = colDef(sortable = FALSE,
+                     style = list(fontWeight = "bold")),
+    Gold = colDef(
+      sortable = TRUE,
+      style = function(value) {
+        scaled <-
+          (value - min(ol_table$Gold)) / (max(ol_table$Gold - min(ol_table$Gold)))
+        color <- pal_inews(scaled)
+        list(background = color)
+      }
+    ),
+    Silver = colDef(
+      sortable = TRUE,
+      style = function(value) {
+        scaled <-
+          (value - min(ol_table$Silver)) / (max(ol_table$Silver - min(ol_table$Silver)))
+        color <- pal_inews(scaled)
+        list(background = color)
+        
+      }
+    ),
+    Bronze = colDef(
+      sortable = TRUE,
+      style = function(value) {
+        scaled <-
+          (value - min(ol_table$Bronze)) / (max(ol_table$Bronze - min(ol_table$Bronze)))
+        color <- pal_inews(scaled)
+        list(background = color)
+      }
+    ),
+    Total = colDef(
+      sortable = TRUE,
+      style = function(value) {
+        scaled <-
+          (value - min(ol_table$Total)) / (max(ol_table$Total - min(ol_table$Total)))
+        color <- pal_inews(scaled)
+        list(background = color)
+      }
+    )
+  )
+)
+```
