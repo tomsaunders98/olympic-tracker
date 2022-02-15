@@ -1,7 +1,7 @@
 #!/bin/bash
 cd /home/pi/OlympicTracker
 
-R -e "rmarkdown::render('table_script.Rmd',output_file='index.html')"
+/usr/local/bin/Rscript script.R
 
 git add --all
 
